@@ -1,0 +1,204 @@
+/**
+ * ui.js — DOM update helpers (status pill, banners, readings)
+ */
+
+const ui = {
+
+  /* ── Status Pill ── */
+
+  setStatus(state, label) {
+    const pill = document.getElementById('statusPill');
+    const dot  = document.getElementById('statusDot');
+    pill.className = 'status-pill pill-' + state;
+    dot.className  = 'status-dot dot-' + state;
+    document.getElementById('statusLabel').textContent = label;
+  },
+
+  setRetryInfo(text) {
+    document.getElementById('retryInfo').textContent = text;
+  },
+
+  /* ── Offline / Stale Banner ── */
+
+  showStaleBanner(lastRowTime, fromCache) {
+    const b   = document.getElementById('offlineBanner');
+    const msg = document.getElementById('offlineMsg');
+    const c   = document.getElementById('cachedAt');
+    msg.textContent = fromCache
+      ? 'โหลดจาก cache — ยังไม่มีการเชื่อมต่อ Sheet'
+      : 'เครื่องวัดออฟไลน์ หรือยังไม่ได้ติดตั้ง — แสดงค่าล่าสุดที่มีใน Sheet';
+    c.textContent = 'ข้อมูลล่าสุด: ' + utils.fmtFull(lastRowTime);
+    b.classList.add('show');
+  },
+
+  hideStaleBanner() {
+    document.getElementById('offlineBanner').classList.remove('show');
+  },
+
+  /* ── Stale Badge (above watt value) ── */
+
+  updateStaleBadge(latestTime) {
+    const badge  = document.getElementById('staleBadge');
+    const agoEl  = document.getElementById('staleAgo');
+    const wattEl = document.getElementById('wattVal');
+
+    if (!latestTime) return;
+
+    const diffMin = (Date.now() - latestTime.getTime()) / 60_000;
+    if (diffMin >= CONFIG.STALE_THRESHOLD_MIN) {
+      badge.classList.remove('hidden');
+      agoEl.textContent = utils.timeAgoTH(latestTime);
+      wattEl.classList.add('stale');
+    } else {
+      badge.classList.add('hidden');
+      wattEl.classList.remove('stale');
+    }
+  },
+
+  /* ── Main Readings ── */
+
+  renderHome(allRows, todayRows, fromCache) {
+    const latest  = allRows[allRows.length - 1];
+    const diffMin = latest.time ? (Date.now() - latest.time.getTime()) / 60_000 : 9999;
+    const isStale = diffMin >= CONFIG.STALE_THRESHOLD_MIN;
+
+    // Status pill
+    if (isStale || fromCache) {
+      this.showStaleBanner(latest.time, fromCache);
+      this.setStatus('stale', 'ข้อมูลล่าสุด · ' + utils.fmtFull(latest.time));
+    } else {
+      this.hideStaleBanner();
+      this.setStatus('online', 'Online · อัปเดต ' + utils.fmtTime(new Date()) + ' น.');
+    }
+
+    // Watt (big number)
+    const w     = latest.w || 0;
+    const wEl   = document.getElementById('wattVal');
+    const cls   = w > CONFIG.ALERT_WATT ? ' critical' : w > 2000 ? ' high' : '';
+    wEl.className = 'load-value' + cls + (isStale ? ' stale' : '');
+    utils.animateNumber(wEl, w);
+    document.getElementById('wattUnit').style.opacity = '1';
+
+    // Stale badge
+    this.updateStaleBadge(latest.time);
+
+    // Meta row
+    utils.setText('vVal',  latest.v  != null ? latest.v.toFixed(1)  : '—');
+    utils.setText('aVal',  latest.a  != null ? latest.a.toFixed(2)  : '—');
+    utils.setText('pfVal', latest.pf != null ? latest.pf.toFixed(2) : '—');
+
+    // PF bar
+    const pf    = latest.pf || 0;
+    const pfBar = document.getElementById('pfBar');
+    utils.setText('pfBig', pf ? pf.toFixed(2) : '—');
+    pfBar.style.width      = Math.min(100, pf * 100) + '%';
+    pfBar.style.background = pf > 0.95 ? '#30d158' : pf > 0.85 ? '#ffd60a' : '#ff453a';
+
+    // Hz bar
+    const hz    = latest.hz || 50;
+    const hzBar = document.getElementById('hzBar');
+    utils.setText('hzBig', hz ? hz.toFixed(1) + ' Hz' : '—');
+    hzBar.style.width = Math.min(100, Math.max(0, ((hz - 49) / 2) * 100)) + '%';
+
+    // kWh / cost cards
+    const tkwh = data.calcKwh(todayRows);
+    const now  = new Date();
+    const mRows = allRows.filter((r) => r.time && r.time >= new Date(now.getFullYear(), now.getMonth(), 1));
+    const mkwh  = data.calcKwh(mRows);
+
+    utils.setHtml('todayKwh', tkwh.toFixed(2) + '<small> kWh</small>');
+    utils.setHtml('monthKwh', mkwh.toFixed(1)  + '<small> kWh</small>');
+    document.getElementById('monthBaht').textContent
+      = '≈' + Math.round(mkwh * CONFIG.TARIFF_BAHT_PER_KWH).toLocaleString('th-TH') + ' ฿';
+
+    // Yesterday comparison
+    const yStart = new Date(now); yStart.setDate(yStart.getDate() - 1); yStart.setHours(0, 0, 0, 0);
+    const yEnd   = new Date(now); yEnd.setHours(0, 0, 0, 0);
+    const ykwh   = data.calcKwh(allRows.filter((r) => r.time && r.time >= yStart && r.time < yEnd));
+    const chEl   = document.getElementById('todayChange');
+    if (ykwh > 0) {
+      const pct = (tkwh - ykwh) / ykwh * 100;
+      chEl.className   = 'card-sub ' + (pct > 0 ? 'up' : 'down');
+      chEl.textContent = (pct > 0 ? '▲ ' : '▼ ') + Math.abs(pct).toFixed(0) + '% จากเมื่อวาน';
+    } else {
+      chEl.textContent = 'ข้อมูลทั้งหมด';
+    }
+
+    // Peak card
+    const ws = todayRows.map((r) => r.w).filter((v) => v !== null);
+    if (ws.length) {
+      const maxW  = Math.max(...ws);
+      const peakI = todayRows.findIndex((r) => r.w === maxW);
+      const peakT = peakI >= 0 ? todayRows[peakI].time : null;
+      utils.setHtml('peakVal', Math.round(maxW).toLocaleString('th-TH') + '<small> W</small>');
+      document.getElementById('peakTime').textContent = peakT ? utils.fmtTime(peakT) + ' น.' : '—';
+    } else {
+      // No data for today → show latest row value as fallback
+      utils.setHtml('peakVal', Math.round(w).toLocaleString('th-TH') + '<small> W</small>');
+      document.getElementById('peakTime').textContent = '(ล่าสุด)';
+    }
+
+    // Footer
+    const prefix = fromCache ? '📦 (cache) ' : '';
+    document.getElementById('updateTime').textContent
+      = prefix + 'ดึงข้อมูล ' + utils.fmtTime(new Date()) + ' น. · ' + allRows.length + ' records';
+  },
+
+  renderStats(allRows, todayRows) {
+    const latest = allRows[allRows.length - 1];
+    const ws     = todayRows.map((r) => r.w).filter((v) => v !== null);
+    const tkwh   = data.calcKwh(todayRows);
+    const now    = new Date();
+    const mRows  = allRows.filter((r) => r.time && r.time >= new Date(now.getFullYear(), now.getMonth(), 1));
+    const mkwh   = data.calcKwh(mRows);
+
+    if (ws.length) {
+      const maxW  = Math.max(...ws), minW = Math.min(...ws);
+      const avgW  = ws.reduce((s, v) => s + v, 0) / ws.length;
+      const peakI = todayRows.findIndex((r) => r.w === maxW);
+      const peakT = peakI >= 0 ? todayRows[peakI].time : null;
+
+      utils.setText('s-todayKwh',  tkwh.toFixed(2));
+      utils.setText('s-peakW',     Math.round(maxW).toLocaleString('th-TH'));
+      document.getElementById('s-peakTime').textContent  = peakT ? utils.fmtTime(peakT) + ' น.' : '—';
+      document.getElementById('s-peakTime2').textContent = peakT ? utils.fmtTime(peakT) + ' น.' : '—';
+      document.getElementById('s-avgW').textContent      = Math.round(avgW).toLocaleString('th-TH') + ' W';
+      document.getElementById('s-minW').textContent      = Math.round(minW).toLocaleString('th-TH') + ' W';
+    } else {
+      utils.setText('s-todayKwh', '—');
+      utils.setText('s-peakW', Math.round(latest.w || 0).toLocaleString('th-TH'));
+      document.getElementById('s-peakTime').textContent  = 'ล่าสุด';
+      document.getElementById('s-avgW').textContent      = '—';
+      document.getElementById('s-minW').textContent      = '—';
+    }
+
+    document.getElementById('s-monthKwh').textContent
+      = mkwh.toFixed(1);
+    document.getElementById('s-monthBaht').textContent
+      = Math.round(mkwh * CONFIG.TARIFF_BAHT_PER_KWH).toLocaleString('th-TH');
+    document.getElementById('s-recCount').textContent
+      = allRows.length.toLocaleString('th-TH') + ' รายการ';
+    document.getElementById('s-lastTs').textContent = utils.fmtFull(latest.time);
+    document.getElementById('s-pf').textContent = latest.pf != null ? latest.pf.toFixed(3) : '—';
+    document.getElementById('s-hz').textContent = latest.hz != null ? latest.hz.toFixed(2) + ' Hz' : '—';
+    document.getElementById('s-v').textContent  = latest.v  != null ? latest.v.toFixed(1)  + ' V' : '—';
+    document.getElementById('s-a').textContent  = latest.a  != null ? latest.a.toFixed(3)  + ' A' : '—';
+  },
+
+  /* Update clock in status bar */
+  startClock() {
+    const tick = () => {
+      const n = new Date();
+      document.getElementById('clock').textContent
+        = utils.pad(n.getHours()) + ':' + utils.pad(n.getMinutes());
+    };
+    tick();
+    setInterval(tick, 1000);
+  },
+
+  /* Update stale badge every minute */
+  startStaleTicker(getLatestTime) {
+    setInterval(() => this.updateStaleBadge(getLatestTime()), 60_000);
+  },
+
+};
