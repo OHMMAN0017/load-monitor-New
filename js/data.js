@@ -3,61 +3,58 @@ const data = {
   rows: [],
   colMap: { ts: 0, v: 1, a: 2, w: 3, kwh: 4, hz: 5, pf: 6 },
 
-  /* ── Fetch จาก Apps Script ── */
-  async fetch(houseId, sheet, period = 'latest', resolution = 'hour') {
-    const url = CONFIG.GAS_URL
-      + '?action=read'
-      + '&sheet='      + sheet
-      + '&period='     + period
-      + '&resolution=' + resolution;
-
-    const res = await fetch(url + '&cb=' + Date.now());
+  async fetch(csvUrl, houseId) {
+    const res = await fetch(csvUrl + '&cb=' + Date.now());
     if (!res.ok) throw new Error('HTTP ' + res.status);
-
-    const json = await res.json();
-   if (json.error) throw new Error(json.error);
-
-// ถ้าไม่มีข้อมูลให้ rows เป็น array ว่าง ไม่ throw error
-if (!json.rows || json.rows.length === 0) {
-  this.rows = [];
-  return false;
-}
-
-cache.save(houseId, JSON.stringify(json.rows));
-this.parseRows(json.rows);
+    const text = await res.text();
+    cache.save(houseId, text);
+    this.parse(text);
+    return false;
   },
 
-  /* ── Parse rows จาก Apps Script ── */
-  parseRows(rows) {
-    if (!rows || !rows.length) throw new Error('ไม่มีข้อมูล');
+  parse(text) {
+    const lines = text.trim().split('\n')
+      .map((l) => l.split(',').map((c) => c.trim().replace(/^"|"$/g, '')));
+    if (lines.length < 2) throw new Error('CSV ว่างเปล่า');
 
-    this.rows = rows.map((r) => {
+    const hdr  = lines[0].map((h) => h.toLowerCase());
+    const find = (...keys) => {
+      const i = hdr.findIndex((h) => keys.some((k) => h.includes(k)));
+      return i >= 0 ? i : -1;
+    };
+
+    this.colMap = {
+      ts:  find('time','stamp','date')             >= 0 ? find('time','stamp','date')             : 0,
+      v:   find('volt','(v)','v ')                 >= 0 ? find('volt','(v)','v ')                 : 1,
+      a:   find('curr','amp','(a)','a ')            >= 0 ? find('curr','amp','(a)','a ')            : 2,
+      w:   find('power','watt','(w)','w ','active') >= 0 ? find('power','watt','(w)','w ','active') : 3,
+      kwh: find('kwh','energy')                    >= 0 ? find('kwh','energy')                    : 4,
+      hz:  find('freq','hz')                       >= 0 ? find('freq','hz')                       : 5,
+      pf:  find('pf','factor')                     >= 0 ? find('pf','factor')                     : 6,
+    };
+
+    const gf = (cols, i) => {
+      if (i < 0 || i >= cols.length) return null;
+      const v = parseFloat(cols[i]);
+      return isNaN(v) ? null : v;
+    };
+
+    const parsed = lines.slice(1).map((cols) => {
+      const ts = this.colMap.ts >= 0 ? cols[this.colMap.ts] : '';
       return {
-        ts:   r[0],
-        time: utils.parseTS(r[0]),
-        v:    parseFloat(r[1]) || null,
-        a:    parseFloat(r[2]) || null,
-        w:    parseFloat(r[3]) || null,
-        kwh:  parseFloat(r[4]) || null,
-        hz:   parseFloat(r[5]) || null,
-        pf:   parseFloat(r[6]) || null,
+        ts,
+        time: utils.parseTS(ts),
+        v:    gf(cols, this.colMap.v),
+        a:    gf(cols, this.colMap.a),
+        w:    gf(cols, this.colMap.w),
+        kwh:  gf(cols, this.colMap.kwh),
+        hz:   gf(cols, this.colMap.hz),
+        pf:   gf(cols, this.colMap.pf),
       };
     }).filter((r) => r.w !== null && !isNaN(r.w));
 
-    if (!this.rows.length) throw new Error('ไม่มีข้อมูล W');
-  },
-
-  /* ── Load cache ── */
-  loadFromCache(houseId) {
-    const { text } = cache.load(houseId);
-    if (!text) return false;
-    try {
-      const rows = JSON.parse(text);
-      this.parseRows(rows);
-      return true;
-    } catch (e) {
-      return false;
-    }
+    if (!parsed.length) throw new Error('ไม่พบคอลัมน์ Power (W) ใน CSV');
+    this.rows = parsed;
   },
 
   todayRows() {

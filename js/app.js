@@ -3,8 +3,7 @@ const app = {
   currentNav:       'home',
   currentElecView:  'today',
   currentGraphView: 'today',
-  currentHouseIdx:  0,
-  currentPeriod:    'thisMonth',
+  currentHouseIdx:  0,        // ← บ้านที่เลือกอยู่
 
   isOnline:    navigator.onLine,
   isFirstLoad: true,
@@ -14,8 +13,6 @@ const app = {
   _retryTimer:        null,
   _retryCountdown:    null,
   _retryCountdownVal: 0,
-  _lastAllRows:       [],
-  _lastTodayRows:     [],
 
   init() {
     ui.startClock();
@@ -30,7 +27,7 @@ const app = {
   },
 
   selectHouse(idx) {
-    if (idx === this.currentHouseIdx) return;
+    if (idx === this.currentHouseIdx) return; // กันกด tab เดิมซ้ำ
     this.currentHouseIdx = idx;
     this.isFirstLoad     = true;
     data.rows            = [];
@@ -38,8 +35,9 @@ const app = {
     this._clearRetry();
     clearTimeout(this._pollTimer);
 
+    // แสดง skeleton ก่อน fetch
     ui.setStatus('loading', 'กำลังโหลด...');
-    document.getElementById('wattVal').innerHTML  = '<span class="sk sk-big"></span>';
+    document.getElementById('wattVal').innerHTML = '<span class="sk sk-big"></span>';
     document.getElementById('wattUnit').style.opacity = '0';
     document.getElementById('todayKwh').innerHTML = '<span class="sk sk-card"></span>';
     document.getElementById('monthKwh').innerHTML = '<span class="sk sk-card"></span>';
@@ -51,7 +49,7 @@ const app = {
   _bindNetworkEvents() {
     window.addEventListener('online', () => {
       this.isOnline = true;
-      document.getElementById('net-icon').textContent  = '●●●';
+      document.getElementById('net-icon').textContent = '●●●';
       document.getElementById('net-label').textContent = 'WiFi';
       this._clearRetry();
       this.retryCount = 0;
@@ -60,7 +58,7 @@ const app = {
     });
     window.addEventListener('offline', () => {
       this.isOnline = false;
-      document.getElementById('net-icon').textContent  = '⊗⊗⊗';
+      document.getElementById('net-icon').textContent = '⊗⊗⊗';
       document.getElementById('net-label').textContent = 'Offline';
       clearTimeout(this._pollTimer);
       ui.setStatus('offline', 'Offline — ไม่มีสัญญาณ');
@@ -82,7 +80,7 @@ const app = {
       this.isFirstLoad ? 'กำลังโหลด...' : 'กำลังอัปเดต...',
     );
     try {
-      await data.fetch(this.house().id, this.house().SHEET, this.currentPeriod, 'hour');
+      await data.fetch(this.house().CSV_URL, this.house().id);
       this._onFetchSuccess(false);
     } catch (e) {
       ui.setStatus('offline', 'โหลดไม่สำเร็จ — แตะเพื่อลองใหม่');
@@ -96,25 +94,13 @@ const app = {
     this.isFirstLoad = false;
     this._clearRetry();
     ui.setRetryInfo('');
-
-    if (!data.rows.length) {
-      // ไม่มีข้อมูล — แสดง status แต่ไม่ error
-      ui.setStatus('stale', 'ยังไม่มีข้อมูลใน Sheet นี้');
-      document.getElementById('wattVal').innerHTML = '<span style="font-size:24px;color:rgba(235,235,245,.3)">ไม่มีข้อมูล</span>';
-      document.getElementById('wattUnit').style.opacity = '0';
-      document.getElementById('updateTime').textContent = 'Sheet ว่างเปล่า — รอการติดตั้งอุปกรณ์';
-      return;
-    }
-
     this._renderAll(fromCache);
-    this._pollTimer = setTimeout(() => this.fetchData(), CONFIG.POLL_INTERVAL_MS);
+    this._pollTimer = setTimeout(() => this.fetchData(), this.house().POLL_INTERVAL_MS || CONFIG.POLL_INTERVAL_MS);
   },
 
   _renderAll(fromCache) {
     const h         = this.house();
     const todayRows = data.todayRows();
-    this._lastAllRows   = data.rows;
-    this._lastTodayRows = todayRows;
     ui.renderHome(data.rows, todayRows, fromCache, h);
     ui.renderStats(data.rows, todayRows, h);
     charts.renderHome(data.rows, todayRows, this.currentElecView);
@@ -136,16 +122,6 @@ const app = {
     this.currentNav = name;
     if (name === 'weather' && !weather.fetched) weather.fetch();
     if (name === 'graph' && data.rows.length) setTimeout(() => this._renderGraphCharts(), 50);
-  },
-
-  /* ── เปลี่ยน period (เดือนนี้ / เดือนที่แล้ว / ทั้งหมด) ── */
-  setPeriod(period, btn) {
-    this.currentPeriod = period;
-    document.querySelectorAll('.period-btn').forEach((b) => b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
-    this.isFirstLoad = true;
-    data.rows = [];
-    this.fetchData();
   },
 
   setElecView(view, btn) {
@@ -171,9 +147,9 @@ const app = {
 
   _loadCacheIfNeeded() {
     if (data.rows.length) return;
-    if (data.loadFromCache(this.house().id)) {
-      this._renderAll(true);
-    }
+    const { text } = cache.load(this.house().id);
+    if (!text) return;
+    try { data.parse(text); this._renderAll(true); } catch (e) {}
   },
 
   _scheduleRetry() {

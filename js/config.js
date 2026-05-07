@@ -1,14 +1,11 @@
 const CONFIG = {
 
-  // Apps Script URL (ใช้ทั้งอ่านและเขียน)
-  GAS_URL: 'https://script.google.com/macros/s/AKfycbxkZ6mTJ1gviVWx72D2mP5kp0qjcS08FBF7g6tPaTjWH4L0NBcz4qPejhy4R_xh2dWE/exec',
-
   HOUSES: [
     {
       id:      'house_141',
       label:   'บ้าน 141',
       address: '141/4 นครปฐม',
-      SHEET:   'Sheet1',
+      CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRx9jo4W-ReWS8yKmNj1P-d2HSgEG1PPgo_Fs1tXC6XmRkvq6CkiKDDAo5IUdsiG-CM0pjdc1jqAHoC/pub?gid=0&single=true&output=csv',
       LOCATION: { lat: 13.8196, lon: 100.0413 },
       TARIFF_BAHT_PER_KWH: 4.5,
       ALERT_WATT: 3000,
@@ -17,7 +14,7 @@ const CONFIG = {
       id:      'house_3913',
       label:   'บ้าน 39/13',
       address: '39/13 ตัวเมืองนครปฐม',
-      SHEET:   '39/13',
+      CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRx9jo4W-ReWS8yKmNj1P-d2HSgEG1PPgo_Fs1tXC6XmRkvq6CkiKDDAo5IUdsiG-CM0pjdc1jqAHoC/pub?gid=982166867&single=true&output=csv',
       LOCATION: { lat: 13.8385, lon: 100.0295 },
       TARIFF_BAHT_PER_KWH: 4.5,
       ALERT_WATT: 3000,
