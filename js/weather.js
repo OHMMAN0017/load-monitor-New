@@ -217,9 +217,8 @@ this._startBgAnimation(bgClass);
     const grad = bgColors[bgClass] || bgColors.rainy;
     bg.style.background = grad;
 
-    // ครอบคลุม status bar + house tabs ด้วย
-    document.querySelector('.phone').style.background = grad;
-    document.querySelector('.phone').style.transition = 'background 1s ease';
+   // ใช้ pseudo overlay แทน เพื่อไม่ทับ house tabs
+    document.querySelector('.phone').style.setProperty('--wx-bg', grad);
 
     if (bgClass === 'sunny') {
       const ray = document.createElement('div');
