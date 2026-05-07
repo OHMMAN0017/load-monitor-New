@@ -27,12 +27,22 @@ const app = {
   },
 
   selectHouse(idx) {
+    if (idx === this.currentHouseIdx) return; // กันกด tab เดิมซ้ำ
     this.currentHouseIdx = idx;
     this.isFirstLoad     = true;
     data.rows            = [];
     ui.setActiveHouseTab(idx);
     this._clearRetry();
     clearTimeout(this._pollTimer);
+
+    // แสดง skeleton ก่อน fetch
+    ui.setStatus('loading', 'กำลังโหลด...');
+    document.getElementById('wattVal').innerHTML = '<span class="sk sk-big"></span>';
+    document.getElementById('wattUnit').style.opacity = '0';
+    document.getElementById('todayKwh').innerHTML = '<span class="sk sk-card"></span>';
+    document.getElementById('monthKwh').innerHTML = '<span class="sk sk-card"></span>';
+    document.getElementById('peakVal').innerHTML  = '<span class="sk sk-card"></span>';
+
     this.fetchData();
   },
 
