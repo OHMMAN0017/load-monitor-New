@@ -100,15 +100,15 @@ const charts = {
     return { labels, data };
   },
 
-  _buildDays(allRows, days) {
+  _buildDays(allRows, days, field = 'w') {
     const labels = [], data = [];
     for (let d = days - 1; d >= 0; d--) {
       const day  = new Date(); day.setDate(day.getDate() - d); day.setHours(0, 0, 0, 0);
       const next = new Date(day); next.setDate(next.getDate() + 1);
       const dr   = allRows.filter((r) => r.time && r.time >= day && r.time < next);
-      const ws   = dr.map((r) => r.w).filter((v) => v !== null);
+      const vals = dr.map((r) => r[field]).filter((v) => v !== null);
       labels.push(d === 0 ? 'วันนี้' : utils.fmtDate(day));
-      data.push(ws.length ? Math.round(ws.reduce((s, v) => s + v, 0) / ws.length) : null);
+      data.push(vals.length ? Math.round(vals.reduce((s, v) => s + v, 0) / vals.length * 100) / 100 : null);
     }
     return { labels, data };
   },
@@ -133,8 +133,8 @@ const charts = {
     let labels, data;
     if (view === 'today') {
       ({ labels, data } = this._buildToday(todayRows, field));
-    } else {
-      ({ labels, data } = this._buildDays(allRows, view === 'week' ? 7 : 30));
+  } else {
+      ({ labels, data } = this._buildDays(allRows, view === 'week' ? 7 : 30, field));
     }
     this._render('lc', 'home', labels, data, color, false);
   },
