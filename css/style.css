@@ -462,3 +462,13 @@ body {
   background: #ffd60a;
   color: #000;
 }
+.reset-zoom-btn {
+  background: #3a3a3c;
+  border: none;
+  color: rgba(235,235,245,.6);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: inherit;
+}

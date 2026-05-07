@@ -1,13 +1,12 @@
 /**
- * charts.js — Chart.js wrapper for all 4 charts
+ * charts.js — Chart.js wrapper พร้อม zoom/pan
  */
 
 const charts = {
 
   instances: { home: null, graph: null, volt: null, amp: null },
 
-  /* Shared Chart.js options factory */
-  _makeOptions(color) {
+  _makeOptions(color, enableZoom = false) {
     return {
       responsive: true,
       maintainAspectRatio: false,
@@ -23,6 +22,17 @@ const charts = {
               : ' —',
           },
         },
+        zoom: enableZoom ? {
+          zoom: {
+            wheel:   { enabled: true },
+            pinch:   { enabled: true },
+            mode:    'x',
+          },
+          pan: {
+            enabled: true,
+            mode:    'x',
+          },
+        } : {},
       },
       scales: {
         x: {
@@ -58,19 +68,22 @@ const charts = {
     };
   },
 
-  _render(canvasId, key, labels, data, color) {
+  _render(canvasId, key, labels, data, color, enableZoom = false) {
     if (this.instances[key]) this.instances[key].destroy();
     const ctx = document.getElementById(canvasId).getContext('2d');
     this.instances[key] = new Chart(ctx, {
       type: 'line',
       data: { labels, datasets: [this._makeDataset(data, color)] },
-      options: this._makeOptions(color),
+      options: this._makeOptions(color, enableZoom),
     });
   },
 
-  /* ── Build labels + data arrays from allRows ── */
+  /* ── Reset zoom ── */
+  resetZoom(key) {
+    if (this.instances[key]) this.instances[key].resetZoom();
+  },
 
-  /** Hourly average for today */
+  /* ── Build data ── */
   _buildToday(rows, field) {
     const hm = {};
     rows.forEach((r) => {
@@ -87,7 +100,6 @@ const charts = {
     return { labels, data };
   },
 
-  /** Daily average for N days */
   _buildDays(allRows, days) {
     const labels = [], data = [];
     for (let d = days - 1; d >= 0; d--) {
@@ -106,26 +118,25 @@ const charts = {
     return this._buildDays(allRows, view === 'week' ? 7 : 30);
   },
 
-  /* ── Public render methods ── */
-
+  /* ── Render ── */
   renderHome(allRows, todayRows, view) {
     const { labels, data } = this.buildWattData(allRows, todayRows, view);
-    this._render('lc', 'home', labels, data, 'rgb(48, 209, 88)');
+    this._render('lc', 'home', labels, data, 'rgb(48, 209, 88)', false);
   },
 
   renderGraph(allRows, todayRows, view) {
     const { labels, data } = this.buildWattData(allRows, todayRows, view);
-    this._render('gc', 'graph', labels, data, 'rgb(48, 209, 88)');
+    this._render('gc', 'graph', labels, data, 'rgb(48, 209, 88)', true); // ← zoom เปิด
   },
 
   renderVolt(todayRows) {
     const { labels, data } = this._buildToday(todayRows, 'v');
-    this._render('vc', 'volt', labels, data, 'rgb(255, 214, 10)');
+    this._render('vc', 'volt', labels, data, 'rgb(255, 214, 10)', true); // ← zoom เปิด
   },
 
   renderAmp(todayRows) {
     const { labels, data } = this._buildToday(todayRows, 'a');
-    this._render('amp', 'amp', labels, data, 'rgb(41, 182, 246)');
+    this._render('ac2', 'amp', labels, data, 'rgb(41, 182, 246)', true); // ← zoom เปิด
   },
 
 };
