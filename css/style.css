@@ -27,6 +27,11 @@ body {
   position: relative;
 }
 
+.phone.wx-active {
+  background: var(--wx-bg, #1c1c1e);
+  transition: background 1s ease;
+}
+
 .statusbar {
   display: flex;
   justify-content: space-between;
