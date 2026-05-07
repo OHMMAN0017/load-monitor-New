@@ -86,8 +86,10 @@ const ui = {
     }
 
     // Watt
-    const w   = latest.w || 0;
-    const wEl = document.getElementById('wattVal');
+    // Watt — แสดงค่าเฉลี่ยทั้งหมด
+    const allWs = allRows.map(r => r.w).filter(v => v !== null);
+    const w     = allWs.length ? Math.round(allWs.reduce((s,v) => s+v,0) / allWs.length) : (latest.w || 0);
+    const wEl   = document.getElementById('wattVal');
     wEl.className = 'load-value' + (w > house.ALERT_WATT ? ' critical' : w > 2000 ? ' high' : '') + (isStale ? ' stale' : '');
     utils.animateNumber(wEl, w);
     document.getElementById('wattUnit').style.opacity = '1';
