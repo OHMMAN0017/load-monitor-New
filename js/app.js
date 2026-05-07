@@ -4,7 +4,7 @@ const app = {
   currentElecView:  'today',
   currentGraphView: 'today',
   currentHouseIdx:  0,
-  currentPeriod:    'lastMonth',  // ← อยู่ตรงนี้
+  currentPeriod:    'thisMonth',
 
   isOnline:    navigator.onLine,
   isFirstLoad: true,
