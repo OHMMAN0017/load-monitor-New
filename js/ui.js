@@ -1,8 +1,24 @@
-/**
- * ui.js — DOM update helpers (status pill, banners, readings)
- */
-
 const ui = {
+
+  /* ── House Tabs ── */
+
+  buildHouseTabs(houses, onSelect) {
+    const wrap = document.getElementById('houseTabs');
+    wrap.innerHTML = '';
+    houses.forEach((h, i) => {
+      const btn = document.createElement('button');
+      btn.className   = 'house-tab' + (i === 0 ? ' active' : '');
+      btn.textContent = h.label;
+      btn.onclick     = () => onSelect(i);
+      wrap.appendChild(btn);
+    });
+  },
+
+  setActiveHouseTab(idx) {
+    document.querySelectorAll('.house-tab').forEach((b, i) => {
+      b.classList.toggle('active', i === idx);
+    });
+  },
 
   /* ── Status Pill ── */
 
@@ -35,15 +51,13 @@ const ui = {
     document.getElementById('offlineBanner').classList.remove('show');
   },
 
-  /* ── Stale Badge (above watt value) ── */
+  /* ── Stale Badge ── */
 
   updateStaleBadge(latestTime) {
     const badge  = document.getElementById('staleBadge');
     const agoEl  = document.getElementById('staleAgo');
     const wattEl = document.getElementById('wattVal');
-
     if (!latestTime) return;
-
     const diffMin = (Date.now() - latestTime.getTime()) / 60_000;
     if (diffMin >= CONFIG.STALE_THRESHOLD_MIN) {
       badge.classList.remove('hidden');
@@ -57,12 +71,12 @@ const ui = {
 
   /* ── Main Readings ── */
 
-  renderHome(allRows, todayRows, fromCache) {
+  renderHome(allRows, todayRows, fromCache, house) {
     const latest  = allRows[allRows.length - 1];
     const diffMin = latest.time ? (Date.now() - latest.time.getTime()) / 60_000 : 9999;
     const isStale = diffMin >= CONFIG.STALE_THRESHOLD_MIN;
 
-    // Status pill
+    // Banner & pill
     if (isStale || fromCache) {
       this.showStaleBanner(latest.time, fromCache);
       this.setStatus('stale', 'ข้อมูลล่าสุด · ' + utils.fmtFull(latest.time));
@@ -71,18 +85,16 @@ const ui = {
       this.setStatus('online', 'Online · อัปเดต ' + utils.fmtTime(new Date()) + ' น.');
     }
 
-    // Watt (big number)
-    const w     = latest.w || 0;
-    const wEl   = document.getElementById('wattVal');
-    const cls   = w > CONFIG.ALERT_WATT ? ' critical' : w > 2000 ? ' high' : '';
-    wEl.className = 'load-value' + cls + (isStale ? ' stale' : '');
+    // Watt
+    const w   = latest.w || 0;
+    const wEl = document.getElementById('wattVal');
+    wEl.className = 'load-value' + (w > house.ALERT_WATT ? ' critical' : w > 2000 ? ' high' : '') + (isStale ? ' stale' : '');
     utils.animateNumber(wEl, w);
     document.getElementById('wattUnit').style.opacity = '1';
 
-    // Stale badge
     this.updateStaleBadge(latest.time);
 
-    // Meta row
+    // Meta
     utils.setText('vVal',  latest.v  != null ? latest.v.toFixed(1)  : '—');
     utils.setText('aVal',  latest.a  != null ? latest.a.toFixed(2)  : '—');
     utils.setText('pfVal', latest.pf != null ? latest.pf.toFixed(2) : '—');
@@ -100,16 +112,16 @@ const ui = {
     utils.setText('hzBig', hz ? hz.toFixed(1) + ' Hz' : '—');
     hzBar.style.width = Math.min(100, Math.max(0, ((hz - 49) / 2) * 100)) + '%';
 
-    // kWh / cost cards
-    const tkwh = data.calcKwh(todayRows);
-    const now  = new Date();
+    // kWh / cost
+    const tkwh  = data.calcKwh(todayRows);
+    const now   = new Date();
     const mRows = allRows.filter((r) => r.time && r.time >= new Date(now.getFullYear(), now.getMonth(), 1));
     const mkwh  = data.calcKwh(mRows);
 
     utils.setHtml('todayKwh', tkwh.toFixed(2) + '<small> kWh</small>');
     utils.setHtml('monthKwh', mkwh.toFixed(1)  + '<small> kWh</small>');
     document.getElementById('monthBaht').textContent
-      = '≈' + Math.round(mkwh * CONFIG.TARIFF_BAHT_PER_KWH).toLocaleString('th-TH') + ' ฿';
+      = '≈' + Math.round(mkwh * house.TARIFF_BAHT_PER_KWH).toLocaleString('th-TH') + ' ฿';
 
     // Yesterday comparison
     const yStart = new Date(now); yStart.setDate(yStart.getDate() - 1); yStart.setHours(0, 0, 0, 0);
@@ -133,18 +145,16 @@ const ui = {
       utils.setHtml('peakVal', Math.round(maxW).toLocaleString('th-TH') + '<small> W</small>');
       document.getElementById('peakTime').textContent = peakT ? utils.fmtTime(peakT) + ' น.' : '—';
     } else {
-      // No data for today → show latest row value as fallback
       utils.setHtml('peakVal', Math.round(w).toLocaleString('th-TH') + '<small> W</small>');
       document.getElementById('peakTime').textContent = '(ล่าสุด)';
     }
 
-    // Footer
-    const prefix = fromCache ? '📦 (cache) ' : '';
     document.getElementById('updateTime').textContent
-      = prefix + 'ดึงข้อมูล ' + utils.fmtTime(new Date()) + ' น. · ' + allRows.length + ' records';
+      = (fromCache ? '📦 (cache) ' : '')
+      + 'ดึงข้อมูล ' + utils.fmtTime(new Date()) + ' น. · ' + allRows.length + ' records';
   },
 
-  renderStats(allRows, todayRows) {
+  renderStats(allRows, todayRows, house) {
     const latest = allRows[allRows.length - 1];
     const ws     = todayRows.map((r) => r.w).filter((v) => v !== null);
     const tkwh   = data.calcKwh(todayRows);
@@ -157,7 +167,6 @@ const ui = {
       const avgW  = ws.reduce((s, v) => s + v, 0) / ws.length;
       const peakI = todayRows.findIndex((r) => r.w === maxW);
       const peakT = peakI >= 0 ? todayRows[peakI].time : null;
-
       utils.setText('s-todayKwh',  tkwh.toFixed(2));
       utils.setText('s-peakW',     Math.round(maxW).toLocaleString('th-TH'));
       document.getElementById('s-peakTime').textContent  = peakT ? utils.fmtTime(peakT) + ' น.' : '—';
@@ -166,7 +175,7 @@ const ui = {
       document.getElementById('s-minW').textContent      = Math.round(minW).toLocaleString('th-TH') + ' W';
     } else {
       utils.setText('s-todayKwh', '—');
-      utils.setText('s-peakW', Math.round(latest.w || 0).toLocaleString('th-TH'));
+      utils.setText('s-peakW',    Math.round(latest.w || 0).toLocaleString('th-TH'));
       document.getElementById('s-peakTime').textContent  = 'ล่าสุด';
       document.getElementById('s-avgW').textContent      = '—';
       document.getElementById('s-minW').textContent      = '—';
@@ -175,7 +184,7 @@ const ui = {
     document.getElementById('s-monthKwh').textContent
       = mkwh.toFixed(1);
     document.getElementById('s-monthBaht').textContent
-      = Math.round(mkwh * CONFIG.TARIFF_BAHT_PER_KWH).toLocaleString('th-TH');
+      = Math.round(mkwh * house.TARIFF_BAHT_PER_KWH).toLocaleString('th-TH');
     document.getElementById('s-recCount').textContent
       = allRows.length.toLocaleString('th-TH') + ' รายการ';
     document.getElementById('s-lastTs').textContent = utils.fmtFull(latest.time);
@@ -185,7 +194,6 @@ const ui = {
     document.getElementById('s-a').textContent  = latest.a  != null ? latest.a.toFixed(3)  + ' A' : '—';
   },
 
-  /* Update clock in status bar */
   startClock() {
     const tick = () => {
       const n = new Date();
@@ -196,7 +204,6 @@ const ui = {
     setInterval(tick, 1000);
   },
 
-  /* Update stale badge every minute */
   startStaleTicker(getLatestTime) {
     setInterval(() => this.updateStaleBadge(getLatestTime()), 60_000);
   },

@@ -1,26 +1,16 @@
-/**
- * data.js — CSV fetching, parsing, and energy calculation
- */
-
 const data = {
 
-  rows: [],   // all parsed rows
-
-  /* ── Column map (auto-detected from header) ── */
+  rows: [],
   colMap: { ts: 0, v: 1, a: 2, w: 3, kwh: 4, hz: 5, pf: 6 },
 
-  /* ── CSV Fetch ── */
-
-  async fetch(fromCacheOnFail = true) {
-    const res = await fetch(CONFIG.CSV_URL + '&cb=' + Date.now());
+  async fetch(csvUrl, houseId) {
+    const res = await fetch(csvUrl + '&cb=' + Date.now());
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const text = await res.text();
-    cache.save(text);
+    cache.save(houseId, text);
     this.parse(text);
-    return false; // not from cache
+    return false;
   },
-
-  /* ── CSV Parse ── */
 
   parse(text) {
     const lines = text.trim().split('\n')
@@ -34,14 +24,13 @@ const data = {
     };
 
     this.colMap = {
-      ts:  find('time', 'stamp', 'date')   >= 0 ? find('time', 'stamp', 'date')   : 0,
-      v:   find('volt', '(v)', 'v ')       >= 0 ? find('volt', '(v)', 'v ')       : 1,
-      a:   find('curr', 'amp', '(a)', 'a ')>= 0 ? find('curr', 'amp', '(a)', 'a '): 2,
-      w:   find('power','watt','(w)','w ','active') >= 0
-             ? find('power','watt','(w)','w ','active') : 3,
-      kwh: find('kwh', 'energy')           >= 0 ? find('kwh', 'energy')           : 4,
-      hz:  find('freq', 'hz')              >= 0 ? find('freq', 'hz')              : 5,
-      pf:  find('pf', 'factor')            >= 0 ? find('pf', 'factor')            : 6,
+      ts:  find('time','stamp','date')                    >= 0 ? find('time','stamp','date')                    : 0,
+      v:   find('volt','(v)','v ')                        >= 0 ? find('volt','(v)','v ')                        : 1,
+      a:   find('curr','amp','(a)','a ')                  >= 0 ? find('curr','amp','(a)','a ')                  : 2,
+      w:   find('power','watt','(w)','w ','active')       >= 0 ? find('power','watt','(w)','w ','active')       : 3,
+      kwh: find('kwh','energy')                           >= 0 ? find('kwh','energy')                           : 4,
+      hz:  find('freq','hz')                              >= 0 ? find('freq','hz')                              : 5,
+      pf:  find('pf','factor')                            >= 0 ? find('pf','factor')                            : 6,
     };
 
     const gf = (cols, i) => {
@@ -68,29 +57,21 @@ const data = {
     this.rows = parsed;
   },
 
-  /* ── Helpers ── */
-
   todayRows() {
     const t = new Date();
     t.setHours(0, 0, 0, 0);
     return this.rows.filter((r) => r.time && r.time >= t);
   },
 
-  /**
-   * Calculate energy (kWh) for a subset of rows.
-   * Prefers the cumulative kWh column (delta first–last).
-   * Falls back to average-power × time estimation.
-   */
   calcKwh(rows) {
     if (!rows.length) return 0;
-    const withE = rows.filter((r) => r.kwh !== null);
-    if (withE.length >= 2) {
-      return Math.max(0, withE[withE.length - 1].kwh - withE[0].kwh);
-    }
+    // delta mode — sum ค่า kwh แต่ละรอบ
+    const deltas = rows.map((r) => r.kwh).filter((v) => v !== null && v >= 0);
+    if (deltas.length) return deltas.reduce((s, v) => s + v, 0);
+    // fallback ประมาณจาก watt
     const ws = rows.map((r) => r.w).filter((v) => v !== null);
     if (!ws.length) return 0;
-    const avgW = ws.reduce((s, v) => s + v, 0) / ws.length;
-    return (avgW / 1000) * (rows.length / 60); // assume 1-minute intervals
+    return (ws.reduce((s, v) => s + v, 0) / ws.length / 1000) * (rows.length / 60);
   },
 
 };

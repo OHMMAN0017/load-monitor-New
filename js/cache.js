@@ -1,37 +1,33 @@
-/**
- * cache.js — localStorage wrapper for CSV data
- */
-
 const cache = {
 
-  KEY_DATA: 'lm_csv_v1',
-  KEY_TS:   'lm_csv_ts_v1',
+  _key(houseId)   { return 'lm_csv_'  + houseId; },
+  _tsKey(houseId) { return 'lm_ts_'   + houseId; },
 
-  save(csvText) {
+  save(houseId, csvText) {
     try {
-      localStorage.setItem(this.KEY_DATA, csvText);
-      localStorage.setItem(this.KEY_TS, Date.now());
+      localStorage.setItem(this._key(houseId),   csvText);
+      localStorage.setItem(this._tsKey(houseId), Date.now());
     } catch (e) {
       console.warn('[cache] save failed:', e);
     }
   },
 
-  load() {
+  load(houseId) {
     try {
       return {
-        text: localStorage.getItem(this.KEY_DATA),
-        ts:   parseInt(localStorage.getItem(this.KEY_TS) || '0'),
+        text: localStorage.getItem(this._key(houseId)),
+        ts:   parseInt(localStorage.getItem(this._tsKey(houseId)) || '0'),
       };
     } catch (e) {
       return { text: null, ts: 0 };
     }
   },
 
-  clear() {
+  clear(houseId) {
     try {
-      localStorage.removeItem(this.KEY_DATA);
-      localStorage.removeItem(this.KEY_TS);
-    } catch (e) { /* ignore */ }
+      localStorage.removeItem(this._key(houseId));
+      localStorage.removeItem(this._tsKey(houseId));
+    } catch (e) {}
   },
 
 };
