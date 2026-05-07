@@ -81,16 +81,21 @@
       </div>
     </div>
 
-    <div class="chart-card">
+ <div class="chart-card">
       <div class="chart-header">
-                    <button class="reset-zoom-btn" onclick="charts.resetZoom('graph')">↺ Reset</button>
-        <div class="chart-title">Load Profile (W)</div>
+        <div class="seg-ctrl">
+          <button class="seg active" onclick="app.setHomeChart('watt',this)">W</button>
+          <button class="seg" onclick="app.setHomeChart('volt',this)">V</button>
+          <button class="seg" onclick="app.setHomeChart('amp',this)">A</button>
+          <button class="seg" onclick="app.setHomeChart('pf',this)">PF</button>
+        </div>
         <div class="seg-ctrl">
           <button class="seg active" onclick="app.setElecView('today',this)">วันนี้</button>
           <button class="seg" onclick="app.setElecView('week',this)">7 วัน</button>
           <button class="seg" onclick="app.setElecView('month',this)">30 วัน</button>
         </div>
       </div>
+      <div class="chart-title" id="homeChartTitle" style="font-size:12px;color:rgba(235,235,245,.4);margin-bottom:8px">กำลังไฟ (W)</div>
       <div class="chart-wrap">
         <canvas id="lc" role="img" aria-label="กราฟโหลดไฟฟ้า"></canvas>
       </div>
