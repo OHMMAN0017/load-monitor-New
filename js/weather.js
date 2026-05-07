@@ -29,20 +29,22 @@ const weather = {
   DAYS_TH: ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'],
 
   async fetch() {
-    const { lat, lon } = CONFIG.LOCATION;
-    document.getElementById('wx-location').textContent = '📍 ' + CONFIG.LOCATION.label;
+    const house = CONFIG.HOUSES[app.currentHouseIdx];
+    const { lat, lon } = house.LOCATION;
+    document.getElementById('wx-location').textContent = '📍 ' + house.address;
     document.getElementById('wx-loading').style.display = 'block';
     document.getElementById('wx-content').style.display = 'none';
     document.getElementById('wx-error').style.display   = 'none';
 
     const url = `https://api.open-meteo.com/v1/forecast`
       + `?latitude=${lat}&longitude=${lon}`
-      + `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,dew_point_2m,visibility`
+      + `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,dew_point_2m,visibility,wind_direction_10m`
+      + `&hourly=temperature_2m,weather_code,precipitation_probability,wind_speed_10m`
       + `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,uv_index_max`
-      + `&timezone=Asia%2FBangkok&forecast_days=5`;
+      + `&timezone=Asia%2FBangkok&forecast_days=10`;
 
     try {
-      const res = await fetch(url);
+      const res = await window.fetch(url);
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const d = await res.json();
       this._render(d);
