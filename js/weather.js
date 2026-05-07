@@ -63,7 +63,9 @@ const weather = {
     // ── Background animation ──
     const code = c.weather_code;
     const wxView = document.getElementById('view-weather');
-    wxView.className = 'view active wx-bg-' + this._bgClass(code);
+    const bgClass = this._bgClass(code);
+wxView.className = 'view active wx-bg-' + bgClass;
+this._startBgAnimation(bgClass);
 
     // ── Current ──
     utils.setText('wx-temp',  Math.round(c.temperature_2m));
@@ -194,5 +196,76 @@ const weather = {
         },
       },
     });
+  },
+  _startBgAnimation(bgClass) {
+    // ลบ particles เก่า
+    document.querySelectorAll('.wx-particle').forEach(e => e.remove());
+    if (this._lightningEl) { this._lightningEl.remove(); this._lightningEl = null; }
+
+    const view = document.getElementById('view-weather');
+
+    if (bgClass === 'sunny') {
+      // Sun glow
+      const ray = document.createElement('div');
+      ray.className = 'wx-particle wx-sun-ray';
+      view.appendChild(ray);
+      // Drifting clouds
+      for (let i = 0; i < 3; i++) {
+        const c = document.createElement('div');
+        c.className = 'wx-particle wx-cloud';
+        c.textContent = '☁️';
+        c.style.top = (20 + i * 80) + 'px';
+        c.style.animationDuration = (20 + i * 8) + 's';
+        c.style.animationDelay = (i * 5) + 's';
+        view.appendChild(c);
+      }
+    }
+
+    if (bgClass === 'rainy' || bgClass === 'stormy') {
+      // Rain drops
+      for (let i = 0; i < 30; i++) {
+        const drop = document.createElement('div');
+        drop.className = 'wx-particle wx-rain-drop';
+        drop.style.left = Math.random() * 100 + '%';
+        drop.style.top  = Math.random() * 100 + '%';
+        drop.style.animationDuration  = (0.6 + Math.random() * 0.8) + 's';
+        drop.style.animationDelay     = (Math.random() * 2) + 's';
+        drop.style.opacity = 0.4 + Math.random() * 0.4;
+        view.appendChild(drop);
+      }
+    }
+
+    if (bgClass === 'stormy') {
+      // Lightning
+      const flash = document.createElement('div');
+      flash.className = 'wx-lightning';
+      flash.style.animationDuration = (2 + Math.random() * 4) + 's';
+      view.appendChild(flash);
+      this._lightningEl = flash;
+    }
+
+    if (bgClass === 'cloudy') {
+      for (let i = 0; i < 4; i++) {
+        const c = document.createElement('div');
+        c.className = 'wx-particle wx-cloud';
+        c.textContent = i % 2 === 0 ? '☁️' : '🌥️';
+        c.style.top = (30 + i * 70) + 'px';
+        c.style.animationDuration = (25 + i * 6) + 's';
+        c.style.animationDelay = (i * 4) + 's';
+        view.appendChild(c);
+      }
+    }
+
+    if (bgClass === 'foggy') {
+      for (let i = 0; i < 3; i++) {
+        const f = document.createElement('div');
+        f.className = 'wx-particle wx-fog';
+        f.textContent = '🌫️';
+        f.style.top = (100 + i * 100) + 'px';
+        f.style.animationDuration = (30 + i * 10) + 's';
+        f.style.animationDelay = (i * 8) + 's';
+        view.appendChild(f);
+      }
+    }
   },
 };
