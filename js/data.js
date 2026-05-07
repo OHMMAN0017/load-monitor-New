@@ -15,11 +15,16 @@ const data = {
     if (!res.ok) throw new Error('HTTP ' + res.status);
 
     const json = await res.json();
-    if (json.error) throw new Error(json.error);
+   if (json.error) throw new Error(json.error);
 
-    cache.save(houseId, JSON.stringify(json.rows));
-    this.parseRows(json.rows);
-    return false;
+// ถ้าไม่มีข้อมูลให้ rows เป็น array ว่าง ไม่ throw error
+if (!json.rows || json.rows.length === 0) {
+  this.rows = [];
+  return false;
+}
+
+cache.save(houseId, JSON.stringify(json.rows));
+this.parseRows(json.rows);
   },
 
   /* ── Parse rows จาก Apps Script ── */

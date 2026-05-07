@@ -96,6 +96,16 @@ const app = {
     this.isFirstLoad = false;
     this._clearRetry();
     ui.setRetryInfo('');
+
+    if (!data.rows.length) {
+      // ไม่มีข้อมูล — แสดง status แต่ไม่ error
+      ui.setStatus('stale', 'ยังไม่มีข้อมูลใน Sheet นี้');
+      document.getElementById('wattVal').innerHTML = '<span style="font-size:24px;color:rgba(235,235,245,.3)">ไม่มีข้อมูล</span>';
+      document.getElementById('wattUnit').style.opacity = '0';
+      document.getElementById('updateTime').textContent = 'Sheet ว่างเปล่า — รอการติดตั้งอุปกรณ์';
+      return;
+    }
+
     this._renderAll(fromCache);
     this._pollTimer = setTimeout(() => this.fetchData(), CONFIG.POLL_INTERVAL_MS);
   },
