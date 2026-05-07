@@ -105,6 +105,11 @@
   <!-- ═══ VIEW: GRAPH ═══ -->
   <div class="view" id="view-graph">
     <div class="graph-section">
+      <div class="period-ctrl">
+  <button class="period-btn" onclick="app.setPeriod('thisMonth',this)">เดือนนี้</button>
+  <button class="period-btn active" onclick="app.setPeriod('lastMonth',this)">เดือนที่แล้ว</button>
+  <button class="period-btn" onclick="app.setPeriod('all',this)">ทั้งหมด</button>
+</div>
       <div class="graph-section-title">โปรไฟล์โหลดรายชั่วโมง</div>
       <div class="chart-card" style="margin-bottom:10px">
         <div class="chart-header">

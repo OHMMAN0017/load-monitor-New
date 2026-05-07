@@ -482,3 +482,27 @@ body {
   cursor: pointer;
   font-family: inherit;
 }
+.period-ctrl {
+  display: flex;
+  gap: 8px;
+  padding: 14px 0 8px;
+  flex-wrap: wrap;
+}
+
+.period-btn {
+  background: #2c2c2e;
+  border: none;
+  border-radius: 20px;
+  padding: 7px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(235,235,245,.5);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .2s;
+}
+
+.period-btn.active {
+  background: #636cff;
+  color: #fff;
+}
