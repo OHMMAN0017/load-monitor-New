@@ -1,15 +1,51 @@
-/**
- * charts.js — Chart.js wrapper พร้อม zoom/pan
- */
-
 const charts = {
 
   instances: { home: null, graph: null, volt: null, amp: null },
+
+  /* ── Aggregate data by resolution ── */
+  _aggregate(rows, field, resolution) {
+    if (!rows.length) return { labels: [], data: [] };
+
+    const buckets = {};
+
+    rows.forEach((r) => {
+      if (!r.time || r[field] === null) return;
+      let key;
+      const d = r.time;
+
+      if (resolution === 'minute') {
+        key = `${d.getMonth()+1}/${d.getDate()} ${utils.pad(d.getHours())}:${utils.pad(d.getMinutes())}`;
+      } else if (resolution === 'hour') {
+        key = `${d.getMonth()+1}/${d.getDate()} ${utils.pad(d.getHours())}:00`;
+      } else { // day
+        key = `${d.getDate()}/${d.getMonth()+1}`;
+      }
+
+      if (!buckets[key]) buckets[key] = [];
+      buckets[key].push(r[field]);
+    });
+
+    const labels = Object.keys(buckets);
+    const data   = labels.map((k) => {
+      const vals = buckets[k];
+      return Math.round(vals.reduce((s, v) => s + v, 0) / vals.length * 100) / 100;
+    });
+
+    return { labels, data };
+  },
+
+  /* ── เลือก resolution ตามจำนวนข้อมูล ── */
+  _autoResolution(rows) {
+    if (rows.length <= 1440) return 'minute'; // ≤ 1 วัน
+    if (rows.length <= 10080) return 'hour';  // ≤ 7 วัน
+    return 'day';
+  },
 
   _makeOptions(color, enableZoom = false) {
     return {
       responsive: true,
       maintainAspectRatio: false,
+      animation: false,
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -24,9 +60,10 @@ const charts = {
         },
         zoom: enableZoom ? {
           zoom: {
-            wheel:   { enabled: true },
+            wheel:   { enabled: true, speed: 0.1 },
             pinch:   { enabled: true },
             mode:    'x',
+            onZoom:  ({ chart }) => charts._onZoom(chart),
           },
           pan: {
             enabled: true,
@@ -36,7 +73,12 @@ const charts = {
       },
       scales: {
         x: {
-          ticks: { color: 'rgba(235,235,245,.3)', font: { size: 10 }, maxTicksLimit: 8 },
+          ticks: {
+            color: 'rgba(235,235,245,.3)',
+            font: { size: 10 },
+            maxTicksLimit: 8,
+            maxRotation: 0,
+          },
           grid:  { color: 'rgba(255,255,255,.04)' },
           border: { display: false },
         },
@@ -59,14 +101,38 @@ const charts = {
       data,
       borderColor: color,
       backgroundColor: color.replace(')', ', 0.08)').replace('rgb', 'rgba'),
-      borderWidth: 2,
-      pointRadius: 2,
-      pointBackgroundColor: color,
+      borderWidth: 1.5,
+      pointRadius: 0,
       fill: true,
-      tension: 0.4,
+      tension: 0.3,
       spanGaps: true,
     };
   },
+
+  /* ── เมื่อ zoom เปลี่ยน → re-render ด้วย resolution ใหม่ ── */
+  _onZoom(chart) {
+    // ดึง range ที่กำลังดูอยู่
+    const xAxis   = chart.scales.x;
+    const visible = xAxis.max - xAxis.min;
+    const total   = chart.data.labels.length;
+    const ratio   = visible / total;
+
+    // ถ้า zoom เข้ามากพอ → เปลี่ยนเป็น minute
+    if (ratio < 0.1 && charts._graphResolution !== 'minute') {
+      charts._graphResolution = 'minute';
+      charts.renderGraph(charts._lastAllRows, charts._lastTodayRows, 'all');
+    } else if (ratio >= 0.1 && ratio < 0.5 && charts._graphResolution !== 'hour') {
+      charts._graphResolution = 'hour';
+      charts.renderGraph(charts._lastAllRows, charts._lastTodayRows, 'all');
+    } else if (ratio >= 0.5 && charts._graphResolution !== 'day') {
+      charts._graphResolution = 'day';
+      charts.renderGraph(charts._lastAllRows, charts._lastTodayRows, 'all');
+    }
+  },
+
+  _graphResolution: 'hour',
+  _lastAllRows:     [],
+  _lastTodayRows:   [],
 
   _render(canvasId, key, labels, data, color, enableZoom = false) {
     if (this.instances[key]) this.instances[key].destroy();
@@ -78,65 +144,48 @@ const charts = {
     });
   },
 
-  /* ── Reset zoom ── */
   resetZoom(key) {
     if (this.instances[key]) this.instances[key].resetZoom();
   },
 
-  /* ── Build data ── */
-  _buildToday(rows, field) {
-    const hm = {};
-    rows.forEach((r) => {
-      if (!r.time || r[field] === null) return;
-      const h = r.time.getHours();
-      (hm[h] = hm[h] || []).push(r[field]);
-    });
-    const labels = [], data = [];
-    for (let h = 0; h < 24; h++) {
-      labels.push(utils.pad(h) + ':00');
-      const vals = hm[h];
-      data.push(vals ? Math.round(vals.reduce((s, v) => s + v, 0) / vals.length * 100) / 100 : null);
-    }
-    return { labels, data };
-  },
-
-  _buildDays(allRows, days) {
-    const labels = [], data = [];
-    for (let d = days - 1; d >= 0; d--) {
-      const day  = new Date(); day.setDate(day.getDate() - d); day.setHours(0, 0, 0, 0);
-      const next = new Date(day); next.setDate(next.getDate() + 1);
-      const dr   = allRows.filter((r) => r.time && r.time >= day && r.time < next);
-      const ws   = dr.map((r) => r.w).filter((v) => v !== null);
-      labels.push(d === 0 ? 'วันนี้' : utils.fmtDate(day));
-      data.push(ws.length ? Math.round(ws.reduce((s, v) => s + v, 0) / ws.length) : null);
-    }
-    return { labels, data };
-  },
-
-  buildWattData(allRows, todayRows, view) {
-    if (view === 'today') return this._buildToday(todayRows, 'w');
-    return this._buildDays(allRows, view === 'week' ? 7 : 30);
-  },
-
-  /* ── Render ── */
+  /* ── Home chart (ย่อ — แสดงแค่วันนี้ รายชั่วโมง) ── */
   renderHome(allRows, todayRows, view) {
-    const { labels, data } = this.buildWattData(allRows, todayRows, view);
+    const res   = view === 'today' ? 'hour' : 'day';
+    const rows  = view === 'today' ? todayRows : allRows;
+    const { labels, data } = this._aggregate(rows, 'w', res);
     this._render('lc', 'home', labels, data, 'rgb(48, 209, 88)', false);
   },
 
+  /* ── Graph chart (ใหญ่ — ข้อมูลทั้งหมด + zoom) ── */
   renderGraph(allRows, todayRows, view) {
-    const { labels, data } = this.buildWattData(allRows, todayRows, view);
-    this._render('gc', 'graph', labels, data, 'rgb(48, 209, 88)', true); // ← zoom เปิด
+    this._lastAllRows   = allRows;
+    this._lastTodayRows = todayRows;
+
+    // auto resolution ตามขนาดข้อมูล
+    if (!this._graphResolution || view !== 'all') {
+      this._graphResolution = this._autoResolution(allRows);
+    }
+
+    const { labels, data } = this._aggregate(allRows, 'w', this._graphResolution);
+    this._render('gc', 'graph', labels, data, 'rgb(48, 209, 88)', true);
+
+    // อัพเดต label แสดง resolution
+    const resLabel = document.getElementById('graphResLabel');
+    if (resLabel) {
+      resLabel.textContent = this._graphResolution === 'minute' ? 'รายนาที'
+                           : this._graphResolution === 'hour'   ? 'รายชั่วโมง'
+                           : 'รายวัน';
+    }
   },
 
   renderVolt(todayRows) {
-    const { labels, data } = this._buildToday(todayRows, 'v');
-    this._render('vc', 'volt', labels, data, 'rgb(255, 214, 10)', true); // ← zoom เปิด
+    const { labels, data } = this._aggregate(todayRows, 'v', 'hour');
+    this._render('vc', 'volt', labels, data, 'rgb(255, 214, 10)', true);
   },
 
   renderAmp(todayRows) {
-    const { labels, data } = this._buildToday(todayRows, 'a');
-    this._render('ac2', 'amp', labels, data, 'rgb(41, 182, 246)', true); // ← zoom เปิด
+    const { labels, data } = this._aggregate(todayRows, 'a', 'hour');
+    this._render('ac2', 'amp', labels, data, 'rgb(41, 182, 246)', true);
   },
 
 };

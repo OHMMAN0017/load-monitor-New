@@ -472,3 +472,13 @@ body {
   cursor: pointer;
   font-family: inherit;
 }
+.reset-zoom-btn {
+  background: #3a3a3c;
+  border: none;
+  color: rgba(235,235,245,.6);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+}

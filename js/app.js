@@ -101,6 +101,8 @@ const app = {
   _renderAll(fromCache) {
     const h         = this.house();
     const todayRows = data.todayRows();
+    this._lastAllRows   = data.rows;    // ← เพิ่ม
+    this._lastTodayRows = todayRows;    // ← เพิ่ม
     ui.renderHome(data.rows, todayRows, fromCache, h);
     ui.renderStats(data.rows, todayRows, h);
     charts.renderHome(data.rows, todayRows, this.currentElecView);
