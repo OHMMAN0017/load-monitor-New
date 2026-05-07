@@ -79,5 +79,19 @@ const utils = {
     const day = Math.floor(diffMin / 1440);
     return `เมื่อ ${day} วันที่แล้ว`;
   },
-
+/** คำนวณค่าไฟโครงสร้างก้าวหน้า (MEA/PEA 2569) */
+  calcProgressiveTariff(kwh) {
+    if (kwh <= 0) return 0;
+    let cost = 0;
+    if (kwh <= 150) {
+      cost = kwh * 3.2484;
+    } else if (kwh <= 400) {
+      cost = 150 * 3.2484 + (kwh - 150) * 4.2218;
+    } else {
+      cost = 150 * 3.2484 + 250 * 4.2218 + (kwh - 400) * 4.4217;
+    }
+    // บวกค่าบริการ + VAT 7%
+    cost = (cost + 38.22) * 1.07;
+    return Math.round(cost);
+  },
 };
