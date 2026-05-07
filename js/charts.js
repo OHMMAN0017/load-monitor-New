@@ -119,9 +119,24 @@ const charts = {
   },
 
   /* ── Render ── */
-  renderHome(allRows, todayRows, view) {
-    const { labels, data } = this.buildWattData(allRows, todayRows, view);
-    this._render('lc', 'home', labels, data, 'rgb(48, 209, 88)', false);
+  renderHome(allRows, todayRows, view, chartType = 'watt') {
+    const fieldMap = { watt: 'w', volt: 'v', amp: 'a', pf: 'pf' };
+    const colorMap = {
+      watt: 'rgb(48, 209, 88)',
+      volt: 'rgb(255, 214, 10)',
+      amp:  'rgb(41, 182, 246)',
+      pf:   'rgb(255, 159, 10)',
+    };
+    const field = fieldMap[chartType] || 'w';
+    const color = colorMap[chartType] || 'rgb(48, 209, 88)';
+
+    let labels, data;
+    if (view === 'today') {
+      ({ labels, data } = this._buildToday(todayRows, field));
+    } else {
+      ({ labels, data } = this._buildDays(allRows, view === 'week' ? 7 : 30));
+    }
+    this._render('lc', 'home', labels, data, color, false);
   },
 
   renderGraph(allRows, todayRows, view) {
