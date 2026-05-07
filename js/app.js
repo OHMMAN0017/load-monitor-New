@@ -116,6 +116,10 @@ const app = {
   },
 
   switchView(name) {
+    // reset phone background เมื่อออกจาก weather
+    if (this.currentNav === 'weather' && name !== 'weather') {
+      document.querySelector('.phone').style.background = '#1c1c1e';
+    }
     document.querySelectorAll('.view').forEach((v) => v.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach((n) => n.classList.remove('active'));
     document.getElementById('view-' + name).classList.add('active');
