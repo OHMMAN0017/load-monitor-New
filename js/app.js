@@ -3,7 +3,8 @@ const app = {
   currentNav:       'home',
   currentElecView:  'today',
   currentGraphView: 'today',
-  currentHouseIdx:  0,        // ← บ้านที่เลือกอยู่
+  currentHouseIdx:  0,// ← บ้านที่เลือกอยู่
+  currentHomeChart: 'watt',
 
   isOnline:    navigator.onLine,
   isFirstLoad: true,
@@ -103,7 +104,7 @@ const app = {
     const todayRows = data.todayRows();
     ui.renderHome(data.rows, todayRows, fromCache, h);
     ui.renderStats(data.rows, todayRows, h);
-    charts.renderHome(data.rows, todayRows, this.currentElecView);
+    charts.renderHome(data.rows, todayRows, this.currentElecView, this.currentHomeChart || 'watt');
     if (this.currentNav === 'graph') this._renderGraphCharts();
   },
 
@@ -128,7 +129,7 @@ const app = {
     this.currentElecView = view;
     document.querySelectorAll('#view-home .seg').forEach((b) => b.classList.remove('active'));
     btn.classList.add('active');
-    charts.renderHome(data.rows, data.todayRows(), view);
+    charts.renderHome(data.rows, data.todayRows(), view, this.currentHomeChart || 'watt');
   },
 
   setGraphView(view, btn) {
@@ -169,7 +170,15 @@ const app = {
     clearTimeout(this._retryTimer);
     clearInterval(this._retryCountdown);
   },
-
+setHomeChart(type, btn) {
+    this.currentHomeChart = type;
+    document.querySelectorAll('#view-home .seg-ctrl:first-child .seg')
+      .forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    const titles = { watt:'กำลังไฟ (W)', volt:'แรงดัน (V)', amp:'กระแส (A)', pf:'Power Factor' };
+    document.getElementById('homeChartTitle').textContent = titles[type] || '';
+    charts.renderHome(data.rows, data.todayRows(), this.currentElecView, type);
+  },
 };
 
 document.addEventListener('DOMContentLoaded', () => app.init());
