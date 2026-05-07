@@ -198,11 +198,9 @@ this._startBgAnimation(bgClass);
     });
   },
   _startBgAnimation(bgClass) {
-    // ลบ container เก่า
     const oldBg = document.getElementById('wx-bg-container');
     if (oldBg) oldBg.remove();
 
-    // สร้าง container แยก ใส่ก่อน content ทั้งหมด
     const view = document.getElementById('view-weather');
     const bg   = document.createElement('div');
     bg.id = 'wx-bg-container';
