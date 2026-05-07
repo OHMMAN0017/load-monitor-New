@@ -266,3 +266,4 @@ this._startBgAnimation(bgClass);
       }
     }
   },
+};
