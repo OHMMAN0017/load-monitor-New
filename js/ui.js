@@ -138,17 +138,17 @@ const ui = {
       chEl.textContent = 'ข้อมูลทั้งหมด';
     }
 
-    // Peak card
-    const ws = todayRows.map((r) => r.w).filter((v) => v !== null);
-    if (ws.length) {
-      const maxW  = Math.max(...ws);
-      const peakI = todayRows.findIndex((r) => r.w === maxW);
-      const peakT = peakI >= 0 ? todayRows[peakI].time : null;
+    // Peak card — ใช้ข้อมูลทั้งหมด
+    const allPeakWs = allRows.map((r) => r.w).filter((v) => v !== null);
+    if (allPeakWs.length) {
+      const maxW  = Math.max(...allPeakWs);
+      const peakI = allRows.findIndex((r) => r.w === maxW);
+      const peakT = peakI >= 0 ? allRows[peakI].time : null;
       utils.setHtml('peakVal', Math.round(maxW).toLocaleString('th-TH') + '<small> W</small>');
-      document.getElementById('peakTime').textContent = peakT ? utils.fmtTime(peakT) + ' น.' : '—';
+      document.getElementById('peakTime').textContent = peakT ? utils.fmtFull(peakT) : '—';
     } else {
-      utils.setHtml('peakVal', Math.round(w).toLocaleString('th-TH') + '<small> W</small>');
-      document.getElementById('peakTime').textContent = '(ล่าสุด)';
+      utils.setHtml('peakVal', '—');
+      document.getElementById('peakTime').textContent = '—';
     }
 
     document.getElementById('updateTime').textContent
