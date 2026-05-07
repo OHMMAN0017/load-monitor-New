@@ -578,7 +578,7 @@ body {
 }
 
 .wx-particle {
-  position: fixed;
+  position: absolute;
   pointer-events: none;
   z-index: 0;
 }
@@ -597,6 +597,7 @@ body {
 }
 
 .wx-sun-ray {
+  position: absolute;
   width: 200px;
   height: 200px;
   border-radius: 50%;
@@ -607,7 +608,7 @@ body {
 }
 
 .wx-lightning {
-  position: fixed;
+  position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(255,255,255,.3);
   pointer-events: none;
