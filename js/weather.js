@@ -206,6 +206,21 @@ this._startBgAnimation(bgClass);
     bg.id = 'wx-bg-container';
     view.insertBefore(bg, view.firstChild);
 
+    const bgColors = {
+      sunny:  'linear-gradient(180deg, #1a6fc4 0%, #1c1c1e 80%)',
+      cloudy: 'linear-gradient(180deg, #4a5568 0%, #1c1c1e 80%)',
+      foggy:  'linear-gradient(180deg, #6b7280 0%, #1c1c1e 80%)',
+      rainy:  'linear-gradient(180deg, #1e3a5f 0%, #1c1c1e 80%)',
+      stormy: 'linear-gradient(180deg, #1a1a2e 0%, #1c1c1e 80%)',
+      snowy:  'linear-gradient(180deg, #c7e9fb 0%, #1c1c1e 80%)',
+    };
+    const grad = bgColors[bgClass] || bgColors.rainy;
+    bg.style.background = grad;
+
+    // ครอบคลุม status bar + house tabs ด้วย
+    document.querySelector('.phone').style.background = grad;
+    document.querySelector('.phone').style.transition = 'background 1s ease';
+
     if (bgClass === 'sunny') {
       const ray = document.createElement('div');
       ray.className = 'wx-particle wx-sun-ray';
