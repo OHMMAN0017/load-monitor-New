@@ -536,3 +536,93 @@ body {
   cursor: pointer;
   font-family: inherit;  
 }
+/* ── Weather Background Animations ───────────────── */
+#view-weather {
+  position: relative;
+  overflow: hidden;
+  transition: background 1s ease;
+}
+
+/* Rain drops */
+@keyframes rainDrop {
+  0%   { transform: translateY(-20px) translateX(0); opacity: 1; }
+  100% { transform: translateY(100vh) translateX(-30px); opacity: 0; }
+}
+
+/* Cloud drift */
+@keyframes cloudDrift {
+  0%   { transform: translateX(-100px); opacity: 0; }
+  10%  { opacity: .15; }
+  90%  { opacity: .15; }
+  100% { transform: translateX(500px); opacity: 0; }
+}
+
+/* Sun rays */
+@keyframes sunRay {
+  0%,100% { opacity: .15; transform: rotate(0deg) scale(1); }
+  50%      { opacity: .3;  transform: rotate(180deg) scale(1.1); }
+}
+
+/* Lightning flash */
+@keyframes lightning {
+  0%,95%,100% { opacity: 0; }
+  96%,98%     { opacity: .6; }
+}
+
+/* Fog drift */
+@keyframes fogDrift {
+  0%   { transform: translateX(-200px); opacity: 0; }
+  20%  { opacity: .2; }
+  80%  { opacity: .2; }
+  100% { transform: translateX(500px); opacity: 0; }
+}
+
+.wx-particle {
+  position: fixed;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.wx-rain-drop {
+  width: 1px;
+  height: 20px;
+  background: linear-gradient(180deg, transparent, rgba(147,197,253,.6));
+  animation: rainDrop linear infinite;
+}
+
+.wx-cloud {
+  font-size: 80px;
+  animation: cloudDrift linear infinite;
+  opacity: 0;
+}
+
+.wx-sun-ray {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(251,191,36,.3) 0%, transparent 70%);
+  top: -50px;
+  right: -50px;
+  animation: sunRay 4s ease-in-out infinite;
+}
+
+.wx-lightning {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,.3);
+  pointer-events: none;
+  z-index: 1;
+  animation: lightning 3s infinite;
+}
+
+.wx-fog {
+  font-size: 60px;
+  animation: fogDrift linear infinite;
+  opacity: 0;
+}
+
+/* Ensure content is above particles */
+#view-weather > * {
+  position: relative;
+  z-index: 2;
+}
