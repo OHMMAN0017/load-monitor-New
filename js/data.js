@@ -7,7 +7,7 @@ const data = {
   async fetch(houseId, sheet, period = 'latest', resolution = 'hour') {
     const url = CONFIG.GAS_URL
       + '?action=read'
-      + '&sheet='      + encodeURIComponent(sheet)
+      + '&sheet='      + sheet
       + '&period='     + period
       + '&resolution=' + resolution;
 
