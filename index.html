@@ -183,49 +183,88 @@
 
   <!-- ═══ VIEW: WEATHER ═══ -->
   <div class="view" id="view-weather">
-    <div class="wx-header">
-      <div class="wx-location" id="wx-location">📍 นครปฐม, ประเทศไทย</div>
-      <div class="wx-city">พยากรณ์อากาศ 5 วัน</div>
-    </div>
     <div id="wx-loading" class="wx-loading">
       <div style="font-size:32px;margin-bottom:10px">🌤️</div>
       กำลังโหลดข้อมูลอากาศ...
     </div>
+
     <div id="wx-content" style="display:none">
-      <div class="wx-now">
-        <div>
-          <div class="load-label" style="margin-bottom:4px;color:rgba(235,235,245,.4)">อุณหภูมิขณะนี้</div>
-          <div style="display:flex;align-items:flex-start">
-            <div class="wx-temp-big" id="wx-temp">—</div>
-            <div style="font-size:28px;font-weight:300;color:rgba(235,235,245,.5);margin-top:10px">°C</div>
-          </div>
-          <div style="font-size:13px;color:rgba(235,235,245,.45);margin-top:4px">
-            รู้สึกเหมือน <span id="wx-feels" style="color:rgba(235,235,245,.8)">—</span>°C
-          </div>
+
+      <!-- Current -->
+      <div class="wx-current">
+        <div class="wx-location-label" id="wx-location">📍 นครปฐม</div>
+        <div class="wx-main-temp">
+          <span id="wx-temp">—</span>°
         </div>
-        <div class="wx-now-right">
-          <div class="wx-icon-big" id="wx-icon">—</div>
-          <div class="wx-desc" id="wx-desc">—</div>
-          <div class="wx-hi-lo">↑<span id="wx-hi">—</span>° ↓<span id="wx-lo">—</span>°</div>
+        <div class="wx-main-desc" id="wx-desc">—</div>
+        <div class="wx-main-hiio">
+          สูง <span id="wx-hi">—</span>° · ต่ำ <span id="wx-lo">—</span>°
         </div>
       </div>
-      <div class="wx-details-row">
-        <div class="wx-detail"><div class="wx-detail-icon">💧</div><div class="wx-detail-val" id="wx-hum">—</div><div class="wx-detail-label">ความชื้น %</div></div>
-        <div class="wx-detail"><div class="wx-detail-icon">🌧️</div><div class="wx-detail-val" id="wx-rain">—</div><div class="wx-detail-label">ฝน % (วันนี้)</div></div>
-        <div class="wx-detail"><div class="wx-detail-icon">💨</div><div class="wx-detail-val" id="wx-wind">—</div><div class="wx-detail-label">ลม km/h</div></div>
+
+      <!-- Hourly scroll -->
+      <div class="wx-card">
+        <div class="wx-card-title">🕐 พยากรณ์รายชั่วโมง</div>
+        <div class="wx-hourly-scroll" id="wx-hourly"></div>
       </div>
-      <div class="wx-details-row">
-        <div class="wx-detail"><div class="wx-detail-icon">☀️</div><div class="wx-detail-val" id="wx-uv">—</div><div class="wx-detail-label">UV Index</div></div>
-        <div class="wx-detail"><div class="wx-detail-icon">🌫️</div><div class="wx-detail-val" id="wx-vis">—</div><div class="wx-detail-label">ทัศนวิสัย km</div></div>
-        <div class="wx-detail"><div class="wx-detail-icon">🌡️</div><div class="wx-detail-val" id="wx-dew">—</div><div class="wx-detail-label">จุดน้ำค้าง °C</div></div>
+
+      <!-- Rain chart -->
+      <div class="wx-card">
+        <div class="wx-card-title">🌧️ โอกาสฝนตก 24 ชม.</div>
+        <div style="height:100px;position:relative">
+          <canvas id="wx-rain-chart"></canvas>
+        </div>
       </div>
-      <div class="wx-forecast">
-        <div class="wx-forecast-title">พยากรณ์ 5 วัน</div>
+
+      <!-- Detail cards -->
+      <div class="wx-detail-grid">
+        <div class="wx-detail-card">
+          <div class="wx-detail-icon">💧</div>
+          <div class="wx-detail-label">ความชื้น</div>
+          <div class="wx-detail-val" id="wx-hum">—</div>
+        </div>
+        <div class="wx-detail-card">
+          <div class="wx-detail-icon">💨</div>
+          <div class="wx-detail-label">ลม</div>
+          <div class="wx-detail-val" id="wx-wind">—</div>
+          <div class="wx-detail-sub" id="wx-wind-dir">—</div>
+        </div>
+        <div class="wx-detail-card">
+          <div class="wx-detail-icon">☀️</div>
+          <div class="wx-detail-label">UV Index</div>
+          <div class="wx-detail-val" id="wx-uv">—</div>
+          <div class="wx-detail-sub" id="wx-uv-level">—</div>
+        </div>
+        <div class="wx-detail-card">
+          <div class="wx-detail-icon">🌡️</div>
+          <div class="wx-detail-label">จุดน้ำค้าง</div>
+          <div class="wx-detail-val" id="wx-dew">—</div>
+        </div>
+        <div class="wx-detail-card">
+          <div class="wx-detail-icon">🌫️</div>
+          <div class="wx-detail-label">ทัศนวิสัย</div>
+          <div class="wx-detail-val" id="wx-vis">—</div>
+          <div class="wx-detail-sub">km</div>
+        </div>
+        <div class="wx-detail-card">
+          <div class="wx-detail-icon">🤔</div>
+          <div class="wx-detail-label">รู้สึกเหมือน</div>
+          <div class="wx-detail-val" id="wx-feels">—</div>
+          <div class="wx-detail-sub">°C</div>
+        </div>
+      </div>
+
+      <!-- 10-day forecast -->
+      <div class="wx-card">
+        <div class="wx-card-title">📅 พยากรณ์ 10 วัน</div>
         <div id="wx-days"></div>
       </div>
+
       <div id="wx-alert-section"></div>
-      <div class="wx-source">ข้อมูลจาก Open-Meteo (ECMWF / WMO) • อัปเดต <span id="wx-updated">—</span></div>
+      <div class="wx-source">Open-Meteo (ECMWF) · อัปเดต <span id="wx-updated">—</span></div>
+
     </div>
+
     <div id="wx-error" class="wx-error" style="display:none">
       <div style="font-size:28px;margin-bottom:8px">⚠️</div>
       โหลดข้อมูลอากาศไม่สำเร็จ<br>
