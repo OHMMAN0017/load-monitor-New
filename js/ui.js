@@ -123,7 +123,7 @@ const ui = {
     utils.setHtml('todayKwh', tkwh.toFixed(2) + '<small> kWh</small>');
     utils.setHtml('monthKwh', mkwh.toFixed(1)  + '<small> kWh</small>');
     document.getElementById('monthBaht').textContent
-      = '≈' + Math.round(mkwh * house.TARIFF_BAHT_PER_KWH).toLocaleString('th-TH') + ' ฿';
+      = '≈' + utils.calcProgressiveTariff(mkwh).toLocaleString('th-TH') + ' ฿';
 
     // Yesterday comparison
     const yStart = new Date(now); yStart.setDate(yStart.getDate() - 1); yStart.setHours(0, 0, 0, 0);
@@ -186,7 +186,7 @@ const ui = {
     document.getElementById('s-monthKwh').textContent
       = mkwh.toFixed(1);
     document.getElementById('s-monthBaht').textContent
-      = Math.round(mkwh * house.TARIFF_BAHT_PER_KWH).toLocaleString('th-TH');
+      = utils.calcProgressiveTariff(mkwh).toLocaleString('th-TH');
     document.getElementById('s-recCount').textContent
       = allRows.length.toLocaleString('th-TH') + ' รายการ';
     document.getElementById('s-lastTs').textContent = utils.fmtFull(latest.time);
