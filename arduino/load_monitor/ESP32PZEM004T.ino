@@ -182,7 +182,7 @@ void loop() {
       http.setTimeout(10000); // timeout 10 วิ ป้องกันค้าง
 
       String url = serverName +
-        "?voltage="   + String(avgVoltage, 2) +
+        "&voltage="   + String(avgVoltage, 2) +
         "&current="   + String(avgCurrent, 3) +
         "&power="     + String(avgPower,   2) +
         "&energy="    + String(avgEnergy,  4) +
