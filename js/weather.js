@@ -217,8 +217,9 @@ this._startBgAnimation(bgClass);
     const grad = bgColors[bgClass] || bgColors.rainy;
     bg.style.background = grad;
 
-   // ใช้ pseudo overlay แทน เพื่อไม่ทับ house tabs
-    document.querySelector('.phone').style.setProperty('--wx-bg', grad);
+   const phone = document.querySelector('.phone');
+    phone.style.setProperty('--wx-bg', grad);
+    phone.classList.add('wx-active');
 
     if (bgClass === 'sunny') {
       const ray = document.createElement('div');
