@@ -623,7 +623,19 @@ body {
 }
 
 /* Ensure content is above particles */
-#view-weather > * {
+#view-weather > *:not(#wx-bg-container) {
   position: relative;
-  z-index: 2;
+  z-index: 3;
+}
+
+#wx-bg-container {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 390px;
+  height: 100vh;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
 }
