@@ -150,6 +150,18 @@ const weather = {
     utils.setText('wx-updated', utils.fmtTime(new Date()) + ' น.');
     document.getElementById('wx-loading').style.display = 'none';
     document.getElementById('wx-content').style.display = 'block';
+
+    // ── Home mini-card ──
+    const homeCard = document.getElementById('home-wx-card');
+    if (homeCard) {
+      utils.setText('home-wx-icon', this.ICONS[code] || '🌡️');
+      utils.setText('home-wx-temp', Math.round(c.temperature_2m));
+      utils.setText('home-wx-desc', this.CODES[code] || '—');
+      utils.setText('home-wx-hi',   Math.round(daily.temperature_2m_max[0]));
+      utils.setText('home-wx-lo',   Math.round(daily.temperature_2m_min[0]));
+      utils.setText('home-wx-hum',  c.relative_humidity_2m + '%');
+      homeCard.style.display = 'flex';
+    }
   },
 
   _bgClass(code) {

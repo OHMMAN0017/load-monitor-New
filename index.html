@@ -106,6 +106,20 @@
       <div class="tariff-val" id="tariffRate">3.00 ฿/Unit</div>
       <div class="tariff-sub">≤ 200 หน่วย อัตราลด</div>
     </div>
+
+    <!-- ── Weather Mini Card ── -->
+    <div class="home-wx-card" id="home-wx-card" onclick="app.switchView('weather')" style="display:none">
+      <div class="home-wx-icon-temp">
+        <span id="home-wx-icon">—</span>
+        <span id="home-wx-temp" class="home-wx-temp-val">—</span><span class="home-wx-deg">°</span>
+      </div>
+      <div class="home-wx-info">
+        <div id="home-wx-desc" class="home-wx-desc">—</div>
+        <div class="home-wx-hilow">สูง <span id="home-wx-hi">—</span>° · ต่ำ <span id="home-wx-lo">—</span>° · <span id="home-wx-hum">—</span></div>
+      </div>
+      <div class="home-wx-arrow">›</div>
+    </div>
+
     <div class="update-time" id="updateTime"></div>
   </div>
 

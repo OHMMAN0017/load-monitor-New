@@ -470,6 +470,52 @@ body {
 .wx-loading { text-align: center; padding: 80px 0; color: rgba(235,235,245,.4); font-size: 14px; }
 .wx-error   { text-align: center; padding: 40px 16px; color: rgba(235,235,245,.4); font-size: 13px; }
 
+/* ── Home Weather Mini Card ──────────────────────────── */
+.home-wx-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #2c2c2e;
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: background .15s;
+  user-select: none;
+}
+.home-wx-card:active { background: #3a3a3c; }
+
+.home-wx-icon-temp {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.home-wx-icon-temp span:first-child { font-size: 32px; line-height: 1; }
+.home-wx-temp-val { font-size: 28px; font-weight: 700; color: #fff; }
+.home-wx-deg      { font-size: 18px; color: rgba(235,235,245,.5); align-self: flex-start; margin-top: 4px; }
+
+.home-wx-info { flex: 1; min-width: 0; }
+.home-wx-desc {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(235,235,245,.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.home-wx-hilow {
+  font-size: 11px;
+  color: rgba(235,235,245,.35);
+  margin-top: 3px;
+}
+
+.home-wx-arrow {
+  font-size: 20px;
+  color: rgba(235,235,245,.2);
+  flex-shrink: 0;
+}
+
 .retry-btn {
   display: inline-block;
   margin-top: 12px;

@@ -21,6 +21,7 @@ const app = {
     ui.startStaleTicker(() => data.rows.length ? data.rows[data.rows.length - 1].time : null);
     this._bindNetworkEvents();
     this.fetchData();
+    weather.fetch(); // โหลดอากาศ background เพื่อแสดง mini-card บนหน้าหลัก
   },
 
   house() {
@@ -33,6 +34,8 @@ const app = {
     this.isFirstLoad     = true;
     data.rows            = [];
     weather.fetched      = false;
+    const hc = document.getElementById('home-wx-card');
+    if (hc) hc.style.display = 'none';
     ui.setActiveHouseTab(idx);
     this._clearRetry();
     clearTimeout(this._pollTimer);
