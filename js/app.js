@@ -32,6 +32,7 @@ const app = {
     this.currentHouseIdx = idx;
     this.isFirstLoad     = true;
     data.rows            = [];
+    weather.fetched      = false;
     ui.setActiveHouseTab(idx);
     this._clearRetry();
     clearTimeout(this._pollTimer);
@@ -133,7 +134,7 @@ const app = {
 
   setElecView(view, btn) {
     this.currentElecView = view;
-    document.querySelectorAll('#view-home .seg').forEach((b) => b.classList.remove('active'));
+    document.querySelectorAll('#view-home .seg-ctrl:last-child .seg').forEach((b) => b.classList.remove('active'));
     btn.classList.add('active');
     charts.renderHome(data.rows, data.todayRows(), view, this.currentHomeChart || 'watt');
   },

@@ -151,6 +151,18 @@ const ui = {
       document.getElementById('peakTime').textContent = '—';
     }
 
+    // Tariff rate card — แสดงอัตราที่ใช้อยู่ตามระดับการใช้เดือนนี้
+    const tariffRate = document.getElementById('tariffRate');
+    const tariffSub  = tariffRate ? tariffRate.nextElementSibling : null;
+    if (tariffRate) {
+      let rate, label;
+      if (mkwh <= 150)      { rate = '3.25 ฿/หน่วย'; label = '≤ 150 หน่วย'; }
+      else if (mkwh <= 400) { rate = '4.22 ฿/หน่วย'; label = '151–400 หน่วย'; }
+      else                  { rate = '4.42 ฿/หน่วย'; label = '> 400 หน่วย'; }
+      tariffRate.textContent = rate;
+      if (tariffSub) tariffSub.textContent = label + ' · เดือนนี้ ' + mkwh.toFixed(0) + ' หน่วย';
+    }
+
     document.getElementById('updateTime').textContent
       = (fromCache ? '📦 (cache) ' : '')
       + 'ดึงข้อมูล ' + utils.fmtTime(new Date()) + ' น. · ' + allRows.length + ' records';

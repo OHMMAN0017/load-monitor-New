@@ -64,8 +64,8 @@ const weather = {
     const code = c.weather_code;
     const wxView = document.getElementById('view-weather');
     const bgClass = this._bgClass(code);
-wxView.className = 'view active wx-bg-' + bgClass;
-this._startBgAnimation(bgClass);
+    wxView.className = 'view active wx-bg-' + bgClass;
+    this._startBgAnimation(bgClass);
 
     // ── Current ──
     utils.setText('wx-temp',  Math.round(c.temperature_2m));
@@ -97,8 +97,6 @@ this._startBgAnimation(bgClass);
     const hourlyEl = document.getElementById('wx-hourly');
     hourlyEl.innerHTML = '';
     for (let i = 0; i < 24; i++) {
-      const idx  = hourly.time.findIndex(t => new Date(t).getHours() === (currentHour + i) % 24
-                    && new Date(t).getDate() === (i < 24 - currentHour ? now.getDate() : now.getDate() + 1));
       const realIdx = currentHour + i < hourly.time.length ? currentHour + i : -1;
       if (realIdx < 0) continue;
       const t    = new Date(hourly.time[realIdx]);
@@ -217,7 +215,7 @@ this._startBgAnimation(bgClass);
     const grad = bgColors[bgClass] || bgColors.rainy;
     bg.style.background = grad;
 
-   const phone = document.querySelector('.phone');
+    const phone = document.querySelector('.phone');
     phone.style.setProperty('--wx-bg', grad);
     phone.classList.add('wx-active');
 
