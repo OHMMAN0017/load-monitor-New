@@ -42,6 +42,20 @@ body {
   color: #fff;
 }
 
+/* ── Notification Bell ───────────────────────────────── */
+.notif-bell {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0;
+  opacity: .45;
+  transition: opacity .2s;
+  line-height: 1;
+}
+.notif-bell:active      { opacity: .7; }
+.notif-bell.notif-active { opacity: 1; }
+
 /* ── Skeleton Loading ────────────────────────────────── */
 @keyframes shimmer {
   0%   { background-position: -400px 0; }

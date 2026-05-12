@@ -222,4 +222,33 @@ const ui = {
     setInterval(() => this.updateStaleBadge(getLatestTime()), 60_000);
   },
 
+  /* ── Notification Bell ── */
+
+  updateNotifBell(permission) {
+    const btn = document.getElementById('notif-bell');
+    if (!btn) return;
+    if (permission === 'granted') {
+      btn.textContent = '🔔';
+      btn.classList.add('notif-active');
+      btn.title = 'การแจ้งเตือนเปิดอยู่';
+    } else if (permission === 'denied') {
+      btn.textContent = '🔕';
+      btn.classList.remove('notif-active');
+      btn.title = 'การแจ้งเตือนถูกบล็อก';
+    } else {
+      btn.textContent = '🔔';
+      btn.classList.remove('notif-active');
+      btn.title = 'แตะเพื่อเปิดการแจ้งเตือน';
+    }
+  },
+
+  initNotifBell() {
+    if (!('Notification' in window)) {
+      const btn = document.getElementById('notif-bell');
+      if (btn) btn.style.display = 'none';
+      return;
+    }
+    this.updateNotifBell(Notification.permission);
+  },
+
 };

@@ -1,0 +1,27 @@
+{
+  "name": "Load Monitor — นครปฐม",
+  "short_name": "LoadMon",
+  "description": "ติดตามโหลดไฟฟ้าแบบ real-time ผ่าน PZEM-004T + ESP32",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#1c1c1e",
+  "orientation": "portrait-primary",
+  "lang": "th",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["utilities"],
+  "screenshots": []
+}

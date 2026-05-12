@@ -4,15 +4,26 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>Load Monitor — นครปฐม</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1c1c1e">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="LoadMon">
+  <link rel="apple-touch-icon" href="icons/icon.svg">
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js"></script>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <div class="phone">
   <div class="statusbar">
     <span id="clock">--:--</span>
-    <div style="display:flex;gap:5px;align-items:center;font-size:13px">
+    <div style="display:flex;gap:10px;align-items:center;font-size:13px">
+      <button id="notif-bell" class="notif-bell" onclick="app.requestNotificationPermission()" title="เปิดการแจ้งเตือน">🔔</button>
       <span id="net-icon" style="font-size:12px">●●●</span>
       <span id="net-label">WiFi</span>
     </div>
@@ -316,5 +327,10 @@
 <script src="js/ui.js"></script>
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js');
+  }
+</script>
 </body>
 </html>

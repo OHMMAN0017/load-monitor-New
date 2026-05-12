@@ -14,12 +14,15 @@ const app = {
   _retryTimer:        null,
   _retryCountdown:    null,
   _retryCountdownVal: 0,
+  _lastAlertTime:     0,
 
   init() {
     ui.startClock();
     ui.buildHouseTabs(CONFIG.HOUSES, (idx) => this.selectHouse(idx));
     ui.startStaleTicker(() => data.rows.length ? data.rows[data.rows.length - 1].time : null);
+    ui.initNotifBell();
     this._bindNetworkEvents();
+    this._bindVisibility();
     this.fetchData();
     weather.fetch(); // โหลดอากาศ background เพื่อแสดง mini-card บนหน้าหลัก
   },
@@ -110,6 +113,10 @@ const app = {
     ui.renderStats(data.rows, todayRows, h);
     charts.renderHome(data.rows, todayRows, this.currentElecView, this.currentHomeChart || 'watt');
     if (this.currentNav === 'graph') this._renderGraphCharts();
+    if (!fromCache && data.rows.length) {
+      const latest = data.rows[data.rows.length - 1];
+      if (latest.w !== null) this._checkAlert(latest.w, h);
+    }
   },
 
   _renderGraphCharts() {
@@ -179,6 +186,45 @@ const app = {
   _clearRetry() {
     clearTimeout(this._retryTimer);
     clearInterval(this._retryCountdown);
+  },
+
+  _bindVisibility() {
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        clearTimeout(this._pollTimer);
+      } else {
+        // กลับมา foreground — fetch ทันที แทนที่จะรอ timer เก่า
+        this._clearRetry();
+        this.retryCount = 0;
+        this.fetchData();
+      }
+    });
+  },
+
+  /* ── Notifications ── */
+
+  async requestNotificationPermission() {
+    if (!('Notification' in window)) return;
+    if (Notification.permission !== 'default') {
+      ui.updateNotifBell(Notification.permission);
+      return;
+    }
+    const result = await Notification.requestPermission();
+    ui.updateNotifBell(result);
+  },
+
+  _checkAlert(watt, house) {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    if (watt < house.ALERT_WATT) return;
+    const cooldown = 15 * 60 * 1000;
+    if (Date.now() - this._lastAlertTime < cooldown) return;
+    this._lastAlertTime = Date.now();
+    new Notification('⚡ โหลดสูงเกินกำหนด — ' + house.label, {
+      body: watt.toLocaleString('th-TH') + ' W (เกิน ' + house.ALERT_WATT.toLocaleString('th-TH') + ' W)',
+      icon: './icons/icon.svg',
+      tag:  'load-alert',
+      renotify: true,
+    });
   },
 setHomeChart(type, btn) {
     this.currentHomeChart = type;
