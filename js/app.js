@@ -128,24 +128,12 @@ const app = {
   },
 
   switchView(name) {
-    const phone = document.querySelector('.phone');
-    if (this.currentNav === 'weather' && name !== 'weather') {
-      phone.classList.remove('wx-active');
-      phone.style.removeProperty('--wx-bg');
-    }
     document.querySelectorAll('.view').forEach((v) => v.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach((n) => n.classList.remove('active'));
     document.getElementById('view-' + name).classList.add('active');
     document.getElementById('nav-'  + name).classList.add('active');
     this.currentNav = name;
-    if (name === 'weather') {
-      if (!weather.fetched) {
-        weather.fetch();
-      } else if (phone.style.getPropertyValue('--wx-bg')) {
-        // weather โหลดไปแล้วจาก background — restore bg ที่ค้างไว้
-        phone.classList.add('wx-active');
-      }
-    }
+    if (name === 'weather' && !weather.fetched) weather.fetch();
     if (name === 'graph' && data.rows.length) setTimeout(() => this._renderGraphCharts(), 50);
   },
 

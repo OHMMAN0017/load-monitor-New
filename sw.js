@@ -1,4 +1,4 @@
-const CACHE = 'load-monitor-v1';
+const CACHE = 'load-monitor-v2';
 
 const APP_SHELL = [
   './',
