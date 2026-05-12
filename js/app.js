@@ -52,6 +52,7 @@ const app = {
     document.getElementById('peakVal').innerHTML  = '<span class="sk sk-card"></span>';
 
     this.fetchData();
+    weather.fetch(); // โหลดอากาศของบ้านใหม่ ให้ home mini-card อัพเดท
   },
 
   _bindNetworkEvents() {
@@ -127,9 +128,8 @@ const app = {
   },
 
   switchView(name) {
-    // reset phone background เมื่อออกจาก weather
+    const phone = document.querySelector('.phone');
     if (this.currentNav === 'weather' && name !== 'weather') {
-      const phone = document.querySelector('.phone');
       phone.classList.remove('wx-active');
       phone.style.removeProperty('--wx-bg');
     }
@@ -138,7 +138,14 @@ const app = {
     document.getElementById('view-' + name).classList.add('active');
     document.getElementById('nav-'  + name).classList.add('active');
     this.currentNav = name;
-    if (name === 'weather' && !weather.fetched) weather.fetch();
+    if (name === 'weather') {
+      if (!weather.fetched) {
+        weather.fetch();
+      } else if (phone.style.getPropertyValue('--wx-bg')) {
+        // weather โหลดไปแล้วจาก background — restore bg ที่ค้างไว้
+        phone.classList.add('wx-active');
+      }
+    }
     if (name === 'graph' && data.rows.length) setTimeout(() => this._renderGraphCharts(), 50);
   },
 
@@ -226,7 +233,8 @@ const app = {
       renotify: true,
     });
   },
-setHomeChart(type, btn) {
+
+  setHomeChart(type, btn) {
     this.currentHomeChart = type;
     document.querySelectorAll('#view-home .seg-ctrl:first-child .seg')
       .forEach((b) => b.classList.remove('active'));

@@ -191,6 +191,7 @@ const ui = {
       utils.setText('s-todayKwh', '—');
       utils.setText('s-peakW',    Math.round(latest.w || 0).toLocaleString('th-TH'));
       document.getElementById('s-peakTime').textContent  = 'ล่าสุด';
+      document.getElementById('s-peakTime2').textContent = 'ล่าสุด';
       document.getElementById('s-avgW').textContent      = '—';
       document.getElementById('s-minW').textContent      = '—';
     }

@@ -229,7 +229,11 @@ const weather = {
 
     const phone = document.querySelector('.phone');
     phone.style.setProperty('--wx-bg', grad);
-    phone.classList.add('wx-active');
+    // ใส่ wx-active เฉพาะตอนอยู่บน weather tab เท่านั้น
+    // ถ้า fetch มาจาก background (init) จะไม่เปลี่ยน bg ของหน้าอื่น
+    if (app.currentNav === 'weather') {
+      phone.classList.add('wx-active');
+    }
 
     if (bgClass === 'sunny') {
       const ray = document.createElement('div');
